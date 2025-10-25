@@ -29,7 +29,7 @@ volumes:
 services:
   squid:
     <<: *default
-    image: sameersbn/squid:3.5.27-2
+    image: ubuntu/squid:5.2-22.04_beta
     container_name: squid
     hostname: squid
     ports:
