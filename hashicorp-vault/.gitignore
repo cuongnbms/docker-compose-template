@@ -1,0 +1,60 @@
+# Vault sensitive data
+vault-init.json
+*.snap
+unseal-keys.txt
+root-token.txt
+
+# Generated certificates
+vault/certs/
+*.crt
+*.key
+*.csr
+*.pem
+*.p12
+*.pfx
+
+# Vault data and logs
+vault/data/
+vault/logs/
+consul/data/
+
+# Backup files
+vault-backup.tar.gz
+*.backup
+backups/
+
+# Docker
+.env
+.env.local
+docker-compose.override.yml
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+.tmp/
