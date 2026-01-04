@@ -1,23 +1,30 @@
 #!/bin/bash
 
-# Backup script for Vault snapshots
+# Backup script for Vault with file storage backend
 # Can be run via cron for regular backups
 
 set -e
 
-VAULT_ADDR="https://vault:8200"
-VAULT_SKIP_VERIFY=true
-BACKUP_DIR="/vault/backups"
+export VAULT_ADDR="https://localhost:8200"
+export VAULT_SKIP_VERIFY=true
+BACKUP_DIR="./vault/backups"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-BACKUP_FILE="vault-snapshot-${TIMESTAMP}.snap"
+BACKUP_FILE="vault-backup-${TIMESTAMP}.tar.gz"
 
 echo "Starting Vault backup process..."
 
 # Create backup directory if it doesn't exist
 mkdir -p "$BACKUP_DIR"
 
-# Create snapshot
-vault operator raft snapshot save "${BACKUP_DIR}/${BACKUP_FILE}"
+# Check if Vault container is running
+if ! docker ps | grep -q "vault"; then
+    echo "Error: Vault container is not running!"
+    exit 1
+fi
+
+# For file storage backend, we backup the entire data directory
+echo "Creating backup of Vault data directory..."
+tar -czf "${BACKUP_DIR}/${BACKUP_FILE}" -C ./vault data/
 
 echo "Backup saved to: ${BACKUP_DIR}/${BACKUP_FILE}"
 
