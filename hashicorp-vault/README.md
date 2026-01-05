@@ -27,7 +27,7 @@ This setup provides a production-ready HashiCorp Vault deployment using Docker C
 3. **Initialize Vault**:
    ```bash
    chmod +x init-vault.sh
-   ./init-vault.sh
+   ./init-vault.sh <username> <password>
    ```
 
 4. **Access Vault**:

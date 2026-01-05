@@ -8,6 +8,16 @@ set -e
 # Skip TLS verification for self-signed certificates
 export VAULT_SKIP_VERIFY=true
 
+# Get admin credentials from arguments
+ADMIN_USER=${1}
+ADMIN_PASS=${2}
+
+if [ -z "$ADMIN_USER" ] || [ -z "$ADMIN_PASS" ]; then
+    echo "Error: Admin credentials not provided."
+    echo "Usage: ./init-vault.sh <username> <password>"
+    exit 1
+fi
+
 echo "Waiting for Vault to be ready..."
 sleep 30
 
@@ -39,7 +49,7 @@ else
     
     # Login with root token
     ROOT_TOKEN=$(cat vault-init.json | jq -r '.root_token')
-    docker-compose exec -T vault sh -c "VAULT_SKIP_VERIFY=true echo $ROOT_TOKEN | vault auth -"
+    docker-compose exec -T vault sh -c "VAULT_SKIP_VERIFY=true echo $ROOT_TOKEN | vault login -"
     
     echo "Setting up basic auth methods and policies..."
     
@@ -54,10 +64,10 @@ path \"*\" {
 EOF"
     
     # Create an admin user
-    docker-compose exec -T vault sh -c "VAULT_SKIP_VERIFY=true vault write auth/userpass/users/admin password=admin123 policies=admin-policy"
+    docker-compose exec -T vault sh -c "VAULT_SKIP_VERIFY=true vault write auth/userpass/users/$ADMIN_USER password=$ADMIN_PASS policies=admin-policy"
     
     echo "Setup completed!"
     echo "You can now access Vault at https://localhost:8200"
-    echo "Admin user: admin / admin123"
+    echo "Admin user: $ADMIN_USER / <hidden>"
     echo "Root token: $ROOT_TOKEN"
 fi
