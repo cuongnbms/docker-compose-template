@@ -36,7 +36,7 @@ EOF
 openssl x509 -req -in "$CERT_DIR/vault.csr" -CA "$CERT_DIR/ca.crt" -CAkey "$CERT_DIR/ca.key" -CAcreateserial -out "$CERT_DIR/vault.crt" -days 365 -extfile "$CERT_DIR/vault.ext"
 
 # Set proper permissions
-chmod 600 "$CERT_DIR/vault.key"
+chmod 644 "$CERT_DIR/vault.key"
 chmod 644 "$CERT_DIR/vault.crt"
 chmod 644 "$CERT_DIR/ca.crt"
 
