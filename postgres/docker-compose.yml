@@ -25,13 +25,17 @@ volumes:
 services:
   postgres:
     <<: *default
-    image: postgres:12.4
+    image: postgres:18.1
     container_name: postgres
     hostname: postgres
+    stop_grace_period: 1m30s
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
+      - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf
+    shm_size: 1g # Important for PostgreSQL to perform complex queries
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
