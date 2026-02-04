@@ -40,9 +40,11 @@ services:
       - "traefik.http.routers.rustfs-api.rule=Host(`rustfs-api.example.com`)"
       - "traefik.http.routers.rustfs-api.entrypoints=https"
       - "traefik.http.routers.rustfs-api.tls.certresolver=ssl"
+      - "traefik.http.routers.rustfs-api.service=rustfs-api"
       - "traefik.http.services.rustfs-api.loadbalancer.server.port=9000"
       # Web Console
       - "traefik.http.routers.rustfs-console.rule=Host(`rustfs.example.com`)"
       - "traefik.http.routers.rustfs-console.entrypoints=https"
       - "traefik.http.routers.rustfs-console.tls.certresolver=ssl"
+      - "traefik.http.routers.rustfs-console.service=rustfs-console"
       - "traefik.http.services.rustfs-console.loadbalancer.server.port=9001"
