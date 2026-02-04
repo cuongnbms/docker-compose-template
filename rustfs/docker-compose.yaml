@@ -1,0 +1,48 @@
+x-default: &default
+  networks:
+    - traefik-net
+  # cpus: 0.5
+  # mem_limit: 500M
+  restart: unless-stopped
+  # init: true
+  # privileged: true
+  # stdin_open: true
+  # tty: true
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10M"
+      max-file: "3"
+
+networks:
+  traefik-net:
+    external: true
+
+services:
+  rustfs:
+    <<: *default
+    image: rustfs/rustfs:latest
+    container_name: rustfs-server
+    ports:
+      - "9000:9000" # S3 API Port
+      - "9001:9001" # Web Console
+    environment:
+      - RUSTFS_ACCESS_KEY=admin
+      - RUSTFS_SECRET_KEY=admin
+      - RUST_LOG=info
+    volumes:
+      - ./data:/data
+      # - ./config:/etc/rustfs
+    user: "1000:1000" # Change your UID/GID
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      - "traefik.http.routers.rustfs-api.rule=Host(`rustfs-api.example.com`)"
+      - "traefik.http.routers.rustfs-api.entrypoints=https"
+      - "traefik.http.routers.rustfs-api.tls.certresolver=ssl"
+      - "traefik.http.services.rustfs-api.loadbalancer.server.port=9000"
+      # Web Console
+      - "traefik.http.routers.rustfs-console.rule=Host(`rustfs.example.com`)"
+      - "traefik.http.routers.rustfs-console.entrypoints=https"
+      - "traefik.http.routers.rustfs-console.tls.certresolver=ssl"
+      - "traefik.http.services.rustfs-console.loadbalancer.server.port=9001"
