@@ -1,6 +1,6 @@
 x-default: &default
   networks:
-    - example-net
+    - traefik-net
   # cpus: 0.5
   # mem_limit: 500M
   restart: unless-stopped
