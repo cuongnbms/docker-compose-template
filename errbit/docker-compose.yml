@@ -1,0 +1,56 @@
+x-default: &default
+  networks:
+    - traefik-net
+  # cpus: 0.5
+  # mem_limit: 500M
+  restart: unless-stopped
+  # init: true
+  # privileged: true
+  # stdin_open: true
+  # tty: true
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10M"
+      max-file: "3"
+
+networks:
+  traefik-net:
+    external: true
+
+
+volumes:
+  mongodb_data:
+
+services:
+  mongo:
+    <<: *default
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')" --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  errbit:
+    <<: *default
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${ERRBIT_PORT:-3000}:3000"
+    env_file: .env
+    environment:
+      MONGO_URL: mongodb://mongo:27017/errbit
+    depends_on:
+      mongo:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-net"
+      - "traefik.http.routers.errbit.rule=Host(`errbit.example.com`)"
+      - "traefik.http.routers.errbit.entrypoints=https"
+      - "traefik.http.routers.errbit.tls.certresolver=ssl"
+      - "traefik.http.services.errbit.loadbalancer.server.port=3000"

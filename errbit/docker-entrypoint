@@ -1,0 +1,14 @@
+#!/bin/bash -e
+
+# Enable jemalloc for reduced memory usage and latency.
+if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*/libjemalloc.so.2 ]; then
+  export LD_PRELOAD="$(echo /usr/lib/*/libjemalloc.so.2)"
+fi
+
+# Bootstrap errbit on first run (creates indexes + admin user)
+if [ "${ERRBIT_BOOTSTRAP}" = "true" ]; then
+  echo "==> Running errbit:bootstrap..."
+  bundle exec rails errbit:bootstrap
+fi
+
+exec "${@}"
