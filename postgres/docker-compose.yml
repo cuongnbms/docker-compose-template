@@ -1,5 +1,3 @@
-
-
 x-default: &default
   networks:
     - traefik-net
@@ -29,14 +27,19 @@ services:
     container_name: postgres
     hostname: postgres
     stop_grace_period: 1m30s
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-your_secure_password}
+      - POSTGRES_DB=${POSTGRES_DB:-production_db}
     ports:
       - 5432:5432
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - /data/postgres:/var/lib/postgresql
       - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf
     shm_size: 1g # Important for PostgreSQL to perform complex queries
     command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: example
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready -U admin"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
