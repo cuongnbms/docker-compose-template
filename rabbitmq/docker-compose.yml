@@ -14,9 +14,6 @@ x-default: &default
       max-size: "10M"
       max-file: "3"
 
-volumes:
-  rabbitmq_data:
-
 networks:
   traefik-net:
     external: true
