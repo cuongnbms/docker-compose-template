@@ -33,16 +33,17 @@ services:
       - RABBITMQ_DEFAULT_USER=dev
       - RABBITMQ_DEFAULT_PASS=dev
       # Shared secret for clustering nodes (useful for future scaling)
-      - RABBITMQ_ERLANG_COOKIE=secure_cluster_cookie_string
+      - RABBITMQ_ERLANG_COOKIE=MY_SECRET_COOKIE_12345
     ports:
       # Standard AMQP protocol port
-      - "5672:5672"
+      - "127.0.0.1:5672:5672"
       # Management UI and HTTP API
-      - "15672:15672"
+      - "127.0.0.1:15672:15672"
       # Prometheus metrics endpoint
-      - "15692:15692"
+      - "127.0.0.1:15692:15692"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - /data/rabbitmq/data:/var/lib/rabbitmq
+      - /data/rabbitmq/log:/var/log/rabbitmq
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
     healthcheck:
       # Ensure the service is ready before other services connect
