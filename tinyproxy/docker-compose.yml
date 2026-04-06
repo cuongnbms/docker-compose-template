@@ -1,6 +1,6 @@
 services:
   tinyproxy:
-    image: vimagick/tinyproxy
+    build: .
     container_name: tinyproxy
     restart: unless-stopped
     ports:
