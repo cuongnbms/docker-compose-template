@@ -37,6 +37,7 @@ services:
     - emqx-log:/opt/emqx/log
     - ./config/emqx.conf:/opt/emqx/etc/emqx.conf:ro
     - ./acl/bootstrap_users.csv:/opt/emqx/etc/auth-bootstrap-users.csv:ro
+    - ./acl/acl.conf:/opt/emqx/etc/acl.conf:ro
 
     labels:
       traefik.enable: true
