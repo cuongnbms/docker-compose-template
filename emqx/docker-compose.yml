@@ -27,7 +27,7 @@ services:
 
   emqx:
     << : *default
-    image: emqx:5.7
+    image: emqx:5.8
     container_name: emqx
     ports:
     - "18083:18083" # Admin UI
@@ -41,7 +41,7 @@ services:
     labels:
       traefik.enable: true
       traefik.docker.network: traefik-net
-      traefik.http.routers.portainer.rule: Host(`dashboard.example.com`)
-      traefik.http.routers.portainer.entrypoints: https
-      traefik.http.routers.portainer.tls.certresolver: ssl
-      traefik.http.services.portainer.loadbalancer.server.port: 18083
+      traefik.http.routers.emqx.rule: Host(`dashboard.example.com`)
+      traefik.http.routers.emqx.entrypoints: https
+      traefik.http.routers.emqx.tls.certresolver: ssl
+      traefik.http.services.emqx.loadbalancer.server.port: 18083
