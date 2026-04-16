@@ -31,7 +31,8 @@ services:
     container_name: emqx
     ports:
     - "18083:18083" # Admin UI
-    - "1883:1883"
+    - "1883:1883"   # MQTT TCP
+    - "8083:8083"   # MQTT WebSocket
     volumes:
     - emqx-data:/opt/emqx/data
     - emqx-log:/opt/emqx/log
