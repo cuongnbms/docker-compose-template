@@ -32,11 +32,11 @@ services:
     ports:
     - "18083:18083" # Admin UI
     - "1883:1883"
-    environment:
-        EMQX_DASHBOARD__DEFAULT_PASSWORD: dev
     volumes:
     - emqx-data:/opt/emqx/data
     - emqx-log:/opt/emqx/log
+    - ./config/emqx.conf:/opt/emqx/etc/emqx.conf:ro
+    - ./acl/bootstrap_users.csv:/opt/emqx/etc/auth-bootstrap-users.csv:ro
 
     labels:
       traefik.enable: true

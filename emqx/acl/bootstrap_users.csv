@@ -1,0 +1,3 @@
+user_id,password,is_superuser
+admin,admin,true
+backend-service,change-me-strong-password,true
