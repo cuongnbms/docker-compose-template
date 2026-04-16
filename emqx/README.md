@@ -1,6 +1,6 @@
 # EMQX MQTT Broker
 
-EMQX 5.x setup with pre-configured authentication via config files.
+EMQX 5.x setup with pre-configured authentication and authorization via config files.
 
 ## Structure
 
@@ -8,10 +8,25 @@ EMQX 5.x setup with pre-configured authentication via config files.
 emqx/
 ├── docker-compose.yml
 ├── config/
-│   └── emqx.conf              # Authentication & authorization config
+│   └── emqx.conf              # Node, cluster, dashboard, authentication & authorization config
 └── acl/
-    └── bootstrap_users.csv    # Pre-loaded MQTT users
+    ├── bootstrap_users.csv    # Pre-loaded MQTT users (username, password, is_superuser)
+    └── acl.conf               # Authorization rules
 ```
+
+## Source of Truth
+
+> **Config files are the source of truth.** Do not edit authentication, authorization, or other settings from the dashboard — changes made there are saved to the internal `cluster.hocon` in the data volume but will be overridden by `emqx.conf` on every restart and lost on `docker compose down -v`.
+>
+> Always make changes in the config files and restart the container.
+
+EMQX config precedence (lowest → highest):
+
+```
+base.hocon  <  cluster.hocon (dashboard)  <  emqx.conf  <  env vars
+```
+
+Our `emqx.conf` sits above `cluster.hocon`, so it always wins on restart.
 
 ## Ports
 
@@ -29,34 +44,53 @@ docker compose up -d
 
 Dashboard: `http://localhost:18083` — login: `admin` / `dev`
 
+> First start only: bootstrap users from `acl/bootstrap_users.csv` are loaded into the built-in database. Subsequent restarts skip users that already exist (you'll see warnings in logs — this is normal).
+
 ## Managing Users
 
-Users are stored in the `emqx-data` volume and persist across restarts.
+Edit `acl/bootstrap_users.csv`, then recreate the volume to reload:
 
-**Create a user (run once after first start):**
-
-```bash
-curl -X POST http://localhost:18083/api/v5/authentication/password_based:built_in_database/users \
-  -H "Content-Type: application/json" \
-  -u "admin:dev" \
-  -d '{"user_id": "backend-service", "password": "change-me-strong-password", "is_superuser": true}'
+```
+user_id,password,is_superuser
+publisher,change-me-strong-password,true   # superuser — full access to all topics
+alice,alice-password,false                 # regular user — subject to ACL rules
 ```
 
-- `is_superuser: true` — can publish/subscribe to any topic (use for backend services)
-- `is_superuser: false` — subject to ACL rules (use for end clients)
+- `is_superuser: true` — bypasses ACL, can publish/subscribe to any topic (use for backend services)
+- `is_superuser: false` — subject to `acl/acl.conf` rules
 
-**List users:**
-```bash
-curl -u "admin:dev" http://localhost:18083/api/v5/authentication/password_based:built_in_database/users
+> Users are loaded from the bootstrap file only on first start (empty database). To reload, run `docker compose down -v && docker compose up -d`.
+
+## Authorization Rules
+
+Edit `acl/acl.conf` and restart (`docker compose restart`) to apply. Rules are evaluated top to bottom — first match wins.
+
+Current rules:
+
+```erlang
+{allow, {username, "publisher"}, all, ["#"]}.          % publisher: full access
+{allow, all, publish,   ["users/${username}/#"]}.       % any user: publish to own topic
+{allow, all, subscribe, ["users/${username}/#"]}.       % any user: subscribe to own topic
+{allow, all, subscribe, ["public/#"]}.                  % any user: subscribe to public topics
+{deny, all}.                                            % deny everything else
 ```
 
-**Delete a user:**
-```bash
-curl -X DELETE -u "admin:dev" \
-  http://localhost:18083/api/v5/authentication/password_based:built_in_database/users/backend-service
+## Authentication
+
+Two authenticators are configured (tried in order):
+
+1. **Built-in database** — username/password from `bootstrap_users.csv`
+2. **JWT (HMAC)** — clients connect with a signed JWT as password; the `sub` claim must match the MQTT username
+
+JWT connection example:
+```js
+mqtt.connect('mqtt://localhost:1883', {
+  username: 'user-123',
+  password: '<jwt-signed-with-secret>'  // sub claim must equal 'user-123'
+})
 ```
 
-> Users are lost if you run `docker compose down -v`. Re-run the create commands after recreating the volume.
+Update `secret` in `emqx.conf` to match your backend signing key.
 
 ## Sending Messages from Backend
 
@@ -66,8 +100,8 @@ curl -X DELETE -u "admin:dev" \
 import mqtt from 'mqtt'
 
 const client = mqtt.connect('mqtt://localhost:1883', {
-  clientId: 'backend-service',
-  username: 'backend-service',
+  clientId: 'publisher',
+  username: 'publisher',
   password: 'change-me-strong-password'
 })
 
@@ -94,8 +128,8 @@ curl -X POST http://localhost:18083/api/v5/publish \
 ## Topic Convention
 
 ```
-users/{user_id}/notifications    # push to specific user
-broadcast/all                    # push to all users
+users/{user_id}/#        # per-user topics (publish & subscribe)
+public/#                 # read-only broadcast topics (subscribe only)
 ```
 
 ## Client Side (Web/Mobile)
@@ -109,11 +143,11 @@ ports:
 
 ```js
 const client = mqtt.connect('ws://your-server:8083/mqtt', {
-  username: 'mobile-client',
-  password: 'client-password'
+  username: 'alice',
+  password: 'alice-password'
 })
 
-client.subscribe('users/123/notifications')
+client.subscribe('users/alice/notifications')
 client.on('message', (topic, payload) => {
   console.log(JSON.parse(payload.toString()))
 })
