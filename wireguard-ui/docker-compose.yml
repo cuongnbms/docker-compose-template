@@ -24,7 +24,7 @@ networks:
 services:
   wireguard:
     <<: *default
-    image: ghcr.io/wg-easy/wg-easy:14
+    image: ghcr.io/wg-easy/wg-easy:15.3
     container_name: wireguard
     hostname: wireguard
     cap_add:
