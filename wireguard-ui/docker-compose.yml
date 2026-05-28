@@ -1,9 +1,4 @@
-# Create password: docker run --rm -it ghcr.io/wg-easy/wg-easy wgpw 'YOUR_PASSWORD'
-
-
 x-default: &default
-  networks:
-    - traefik-net
   # cpus: 0.5
   # mem_limit: 500M
   restart: unless-stopped
@@ -17,31 +12,35 @@ x-default: &default
       max-size: "10M"
       max-file: "3"
 
-networks:
-  traefik-net:
-    external: true
-
 services:
-  wireguard:
+  wg-easy:
     <<: *default
-    image: ghcr.io/wg-easy/wg-easy:15.3
-    container_name: wireguard
-    hostname: wireguard
+    image: ghcr.io/wg-easy/wg-easy:15
+    container_name: wg-easy
+    environment:
+      - DISABLE_IPV6=true
+      # --- Init headless (Runs on first boot only, remove this block afterward) ---
+      - INIT_ENABLED=true
+      - INIT_USERNAME=admin
+      - INIT_PASSWORD=admin                # Plain text, no longer a hash
+      - INIT_HOST=123.123.123.123          # Bastion EIP
+      - INIT_PORT=51820
+      - INIT_DNS=10.8.0.2                  # AmazonProvidedDNS to resolve EKS/RDS endpoints x.x.x.2
+      - INIT_IPV4_CIDR=10.8.0.0/24         # ew-prod bastion WG pool (cidr-plan)
+      - INIT_IPV6_CIDR=fd00:8::/64         # IPv6 ULA — must be set together with IPv4 (v15 group rule) even DISABLE_IPV6=true
+      - INIT_ALLOWED_IPS=10.30.0.0/16      # Split-tunnel: routes VPC traffic only via WG
+      # --- Runtime ---
+      - INSECURE=true                      # HTTP-only (Accessed via SSM tunnel, no TLS termination)
+      - PORT=51821
+      - HOST=0.0.0.0
+    volumes:
+      - ./data:/etc/wireguard
+    ports:
+      - "51820:51820/udp"                    # WG handshake — Public
+      - "127.0.0.1:51821:51821/tcp"          # UI — Localhost only, accessed via SSM port-forwarding
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    environment:
-      LANG: en
-      WG_HOST: "<YOUR_SERVER_IP>"
-      PASSWORD_HASH: "$$2a$$12$$GRWi.SNYpZovU/cLZOpz8.7AVPS2GJz49/6GrpVkjUuRad3ytbG6W" # admin
-      PORT: 8080 # UI port
-      WG_PORT: 51820
-      WG_DEFAULT_ADDRESS: 10.8.0.x # Clients IP address range.
-
-    volumes:
-      - ./wg-easy:/etc/wireguard
-    ports:
-      - "51820:51820/udp"
-      - "8080:8080/tcp"
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
