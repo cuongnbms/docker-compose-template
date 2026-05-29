@@ -37,8 +37,12 @@ services:
 
   errbit:
     <<: *default
-    build: .
+    build:
+      context: .
+      args:
+        ERRBIT_BRANCH: ${ERRBIT_BRANCH:-main}
     image: errbit
+    pull_policy: build
     restart: unless-stopped
     ports:
       - "${ERRBIT_PORT:-3000}:3000"
@@ -55,21 +59,3 @@ services:
       - "traefik.http.routers.errbit.entrypoints=https"
       - "traefik.http.routers.errbit.tls.certresolver=ssl"
       - "traefik.http.services.errbit.loadbalancer.server.port=3000"
-
-  # Periodically purges errors older than ERRBIT_PROBLEM_DESTROY_AFTER_DAYS.
-  errbit-cleanup:
-    <<: *default
-    image: errbit
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      MONGO_URL: mongodb://mongo:27017/errbit
-      ERRBIT_BOOTSTRAP: "false"
-    depends_on:
-      mongo:
-        condition: service_healthy
-      errbit:
-        condition: service_started
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - while true; do bundle exec rails errbit:clear_outdated; sleep 86400; done

@@ -4,7 +4,7 @@
 # Errbit Dockerfile - standalone build from GitHub source
 # ============================================================
 
-FROM ruby:4.0.1-slim AS base
+FROM ruby:3.4.9-slim AS base
 
 WORKDIR /rails
 
@@ -22,8 +22,7 @@ ENV RAILS_ENV="production" \
     BOOTSNAP_READONLY="true"
 
 RUN set -eux ; \
-    gem update --system "4.0.6" ; \
-    gem install bundler --version "4.0.6" --force
+    gem install bundler --version "2.6.9" --force
 
 # ---- Build stage ----
 FROM base AS build
@@ -33,7 +32,7 @@ RUN set -eux ; \
     apt-get dist-upgrade -qq ; \
     apt-get install --no-install-recommends -y build-essential git pkg-config libyaml-dev
 
-ARG ERRBIT_BRANCH=main
+ARG ERRBIT_BRANCH=v0.10.11
 RUN git clone --depth 1 --branch "${ERRBIT_BRANCH}" https://github.com/errbit/errbit.git /rails
 
 WORKDIR /rails
