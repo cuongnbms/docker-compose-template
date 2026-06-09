@@ -1,8 +1,6 @@
 # See settings from: https://devopscube.com/setup-and-configure-proxy-server/
 # --------------------------------------------------------------------------------
 
-
-
 x-default: &default
   networks:
     - squid-net

@@ -1,5 +1,3 @@
-
-
 x-default: &default
   networks:
     - example-net
