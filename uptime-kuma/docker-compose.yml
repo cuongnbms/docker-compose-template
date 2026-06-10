@@ -24,7 +24,7 @@ volumes:
 services:
   uptime_kuma:
     <<: *default
-    image: louislam/uptime-kuma:1-alpine
+    image: louislam/uptime-kuma:2
     container_name: uptime_kuma
     hostname: uptime_kuma
     # ports:
