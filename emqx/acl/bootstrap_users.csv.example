@@ -1,3 +1,2 @@
 user_id,password,is_superuser
-admin,admin,true
 publisher,change-me-strong-password,true

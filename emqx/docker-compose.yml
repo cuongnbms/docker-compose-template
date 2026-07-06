@@ -29,6 +29,23 @@ services:
     << : *default
     image: emqx:5.8
     container_name: emqx
+    env_file: .env
+    environment:
+      # Secrets injected from .env (fail fast if unset). Env vars have the
+      # highest precedence and override emqx.conf.
+      EMQX_NODE__COOKIE: ${EMQX_NODE_COOKIE:?set EMQX_NODE_COOKIE in .env}
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: ${EMQX_DASHBOARD_PASSWORD:?set EMQX_DASHBOARD_PASSWORD in .env}
+      # `2` = position of the jwt authenticator in emqx.conf's authentication list.
+      EMQX_AUTHENTICATION__2__SECRET: ${EMQX_JWT_SECRET:?set EMQX_JWT_SECRET in .env}
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
     ports:
     - "18083:18083" # Admin UI
     - "1883:1883"   # MQTT TCP
