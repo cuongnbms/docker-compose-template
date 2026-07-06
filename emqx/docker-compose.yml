@@ -60,7 +60,15 @@ services:
     labels:
       traefik.enable: true
       traefik.docker.network: traefik-net
+      # Dashboard UI (HTTP)
       traefik.http.routers.emqx.rule: Host(`dashboard.example.com`)
       traefik.http.routers.emqx.entrypoints: https
       traefik.http.routers.emqx.tls.certresolver: ssl
+      traefik.http.routers.emqx.service: emqx
       traefik.http.services.emqx.loadbalancer.server.port: 18083
+      # MQTT over WebSocket (WS upgrade is HTTP → http router; client: wss://ws.example.com/mqtt)
+      traefik.http.routers.emqx-ws.rule: Host(`ws.example.com`)
+      traefik.http.routers.emqx-ws.entrypoints: https
+      traefik.http.routers.emqx-ws.tls.certresolver: ssl
+      traefik.http.routers.emqx-ws.service: emqx-ws
+      traefik.http.services.emqx-ws.loadbalancer.server.port: 8083

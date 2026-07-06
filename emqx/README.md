@@ -86,8 +86,8 @@ Guardrails (verified):
 | Port  | Description       |
 |-------|-------------------|
 | 1883  | MQTT              |
-| 8083  | MQTT over WebSocket (add to ports if needed for web clients) |
-| 18083 | Dashboard UI      |
+| 8083  | MQTT over WebSocket (exposed via Traefik at `wss://ws.example.com/mqtt`) |
+| 18083 | Dashboard UI (exposed via Traefik at `https://dashboard.example.com`) |
 
 ## Host Tuning (Production)
 
@@ -221,15 +221,14 @@ public/#                 # read-only broadcast topics (subscribe only)
 
 ## Client Side (Web/Mobile)
 
-Web clients connect via WebSocket on port `8083`. Expose it by adding to `docker-compose.yml`:
-
-```yaml
-ports:
-  - "8083:8083"
-```
+Web clients connect via WebSocket. In production Traefik terminates TLS and routes
+`Host(ws.example.com)` to the broker's WS listener (port `8083`), so clients use
+`wss://ws.example.com/mqtt` — no host port publish needed (see the `emqx-ws` router
+labels in `docker-compose.yml`; change `ws.example.com` to your domain).
 
 ```js
-const client = mqtt.connect('ws://your-server:8083/mqtt', {
+// production (via Traefik, TLS-terminated)
+const client = mqtt.connect('wss://ws.example.com/mqtt', {
   username: 'alice',
   password: 'alice-password'
 })
@@ -239,3 +238,6 @@ client.on('message', (topic, payload) => {
   console.log(JSON.parse(payload.toString()))
 })
 ```
+
+> Local dev: the `8083` host port is published, so you can connect directly with
+> `ws://localhost:8083/mqtt` (no TLS) without going through Traefik.
