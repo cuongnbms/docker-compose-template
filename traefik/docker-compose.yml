@@ -33,6 +33,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.http.address=:80"
       - "--entrypoints.https.address=:443"
+      - "--entrypoints.metrics.address=:8082"
       - --entrypoints.http.http.redirections.entrypoint.to=https
       - --entryPoints.http.http.redirections.entrypoint.scheme=https
       - --entrypoints.https.asDefault=true 
@@ -43,17 +44,30 @@ services:
       - "--certificatesresolvers.ssl.acme.email=cuongnb14@gmail.com"
       - "--certificatesresolvers.ssl.acme.storage=/traefik-conf/acme.json"
       - "--global.sendAnonymousUsage=false"
-      - "--accesslog=false"
+      - "--ping=true"
+      - "--accesslog=true"
+      - "--accesslog.format=json"
       - "--accesslog.filepath=/logs/access.log"
+      - "--accesslog.filters.minduration=500ms" # only log slow requests (> 500ms)
+      - "--accesslog.filters.statuscodes=400-599" # ...and always log 4xx/5xx errors even if fast (filters are OR'd)
       # - "--accesslog.bufferingsize=100" # un-comment if need optimize performance and don't need real-time
-      # - "--accesslog.filters.minduration=180ms" # keep access logs when requests take longer than the specified duration
       - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entrypoint=metrics" # serve /metrics only on the internal entrypoint
       - "--providers.file.directory=/traefik-conf/config"
       # - "--api.dashboard=true"
+
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
     ports:
       - 80:80
       - 443:443
+      # Prometheus metrics — bound to localhost only, not reachable from outside the host
+      - "127.0.0.1:8082:8082"
       # - "127.0.0.1:8080:8080"
     labels:
       - "traefik.enable=true"
@@ -64,6 +78,14 @@ services:
       - "traefik.http.routers.redirs.rule=hostregexp(`{host:.+}`)"
       - "traefik.http.routers.redirs.entrypoints=http"
       - "traefik.http.routers.redirs.middlewares=redirect-to-https"
+      # Shared security headers middleware (attach per service: middlewares=security-headers@docker)
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
       # Basic Auth
       - "traefik.http.middlewares.dev-auth.basicauth.users=admin:$$apr1$$Wqv22bo4$$wG/J3dFs1HC6IGjyyh4D41"
 
