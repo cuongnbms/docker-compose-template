@@ -1,9 +1,51 @@
+# Number of newest local backups to keep (must be >= 1). With a daily cron this
+# is how many days of history you can restore from.
 keep: 2
+
+# Schedule in standard 5-field cron syntax.
 cron: 0 0 * * *
 
+# Local backup directory inside the container (default /backup).
+# backup_dir: /backup
+
+# Offsite destinations. Any number can be enabled at once; each keeps its own
+# retention, counted separately from the local `keep` above (0 = unlimited).
+# Credentials come from .env — see .env.example.
+remote_backup:
+  azure_blob_storage:
+    enable: false
+    keep: 0
+  aws_s3:
+    enable: false
+    keep: 0
+  # Slowest upload rate still worth waiting for, in KiB/s. Each destination gets
+  # the artifact size divided by this rate to finish in, never less than 5
+  # minutes. Without it a wedged connection hangs the run and cron then silently
+  # skips every following one. 0 disables the deadline.
+  min_upload_speed_kbps: 1024
+
+# Databases never dumped. Each entry is a glob pattern matched against the
+# database name; a pattern without a metacharacter matches exactly. Template
+# databases are always skipped.
 exclude_databases:
   - postgres
 
-exclude_tables:
+# Tables whose rows are left out of a database's dump. The table itself is still
+# dumped, so views and foreign keys that reference it still restore. Entries are
+# pg_dump table patterns and reach partitions of a partitioned table. Qualify
+# with a schema: an unqualified pattern only matches tables visible in the
+# connection's search_path, so `users` finds public.users but not audit.users --
+# write `audit.users` or `*.users` for those.
+exclude_table_data:
   demo:
-    - users
+    - public.users
+
+# Which events produce a Slack/Discord notification. Omit or leave empty to
+# disable. Set SLACK_WEBHOOK_URL and/or DISCORD_WEBHOOK_URL in .env to choose
+# where they go.
+notify:
+  events:
+    - backup_failed
+    - upload_failed
+    - remote_cleanup_failed
+    # - backup_succeeded

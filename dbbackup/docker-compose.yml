@@ -22,14 +22,11 @@ services:
 
   dbbackup:
     <<: *default
-    image: cuongnb14/db-backup:1.0
+    image: cuongnb14/db-backup:1.5
     container_name: dbbackup
-    environment:
-      PG_HOST: devhost
-      PG_PORT: 5432
-      PG_USER: dev
-      PG_PASSWORD: dev
-      PG_SSLMODE: disable
+    # Copy .env.example to .env and fill in real values. Never commit .env.
+    env_file:
+      - .env
     volumes:
-      - ./backup:/backup
-      - ./config.yaml:/app/config.yaml
+      - ./backup_data:/backup
+      - ./config.yaml:/app/config.yaml:ro
