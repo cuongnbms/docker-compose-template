@@ -31,6 +31,12 @@ Exit code is non-zero on failure; refuses to start if the scheduled job is alrea
 Remote uploads and notifications are off by default: flip `remote_backup.*.enable`
 in `config.yaml` and set the matching credentials / webhook URLs in `.env`.
 
+Each remote destination stores artifacts under its own `prefix` (default
+`databases/`), and its retention only ever deletes under that prefix — give a
+bucket or container shared with anything else a prefix of its own. Changing the
+prefix after a run strands the old artifacts where retention no longer reaches
+them; delete those by hand.
+
 ## Restore
 
 ```sh

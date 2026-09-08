@@ -14,10 +14,18 @@ cron: 0 0 * * *
 remote_backup:
   azure_blob_storage:
     enable: false
+    # Number of newest artifacts to keep under `prefix`. 0 = unlimited.
     keep: 0
+    # Folder every artifact is stored under at this destination. Defaults to
+    # `databases/`; must not be empty, because remote retention deletes under
+    # it and the container root would reach whatever else is stored there.
+    # Changing it after a run leaves the old artifacts at the old prefix, where
+    # remote retention no longer reaches them -- delete those by hand.
+    prefix: databases/
   aws_s3:
     enable: false
     keep: 0
+    prefix: databases/
   # Slowest upload rate still worth waiting for, in KiB/s. Each destination gets
   # the artifact size divided by this rate to finish in, never less than 5
   # minutes. Without it a wedged connection hangs the run and cron then silently
