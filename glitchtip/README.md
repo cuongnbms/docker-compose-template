@@ -54,6 +54,22 @@ Admin > User > Add user
 - Add user to organization
 Admin > Organization user > Add organization user
 
+# Enabling MCP
+Set the following environment variable on your GlitchTip server:
+```
+GLITCHTIP_ENABLE_MCP=True
+```
+
+The MCP endpoint is available at:
+```
+https://your-glitchtip.example.com/mcp
+```
+
+Add to claude code
+```
+claude mcp add --transport http glitchtip https://your-glitchtip.example.com/mcp
+```
+
 # Upgrade
 ```sh
 docker compose pull
