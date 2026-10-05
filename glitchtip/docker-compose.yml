@@ -12,13 +12,13 @@ x-environment:
   EMAIL_URL: consolemail:// # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
   GLITCHTIP_DOMAIN: https://${GLITCHTIP_HOST:?set GLITCHTIP_HOST in .env}
   DEFAULT_FROM_EMAIL: email@example.com # Change this to your email
-  ENABLE_ADMIN: "False" # Set to True to enable Django Admin at /admin/
+  ENABLE_ADMIN: "True" # Set to True to enable Django Admin at /admin/
   ENABLE_OPENAPI: "False" # Set to True to enable OpenAPI spec at /api/docs
-  GLITCHTIP_ENABLE_MCP: "False" # Set to True to enable MCP server
+  GLITCHTIP_ENABLE_MCP: "True" # Set to True to enable MCP server
   GLITCHTIP_ENABLE_DUCKDB: "False" # Set to True to enable cold storage archival
   ENABLE_USER_REGISTRATION: "False" # When False, user self-signup is disabled after the first user is registered
-  ENABLE_ORGANIZATION_CREATION: "False"
-  GLITCHTIP_MAX_EVENT_LIFE_DAYS: 90
+  ENABLE_ORGANIZATION_CREATION: "True"
+  GLITCHTIP_MAX_EVENT_LIFE_DAYS: 14
   # PORT: 8000 # If changing, change the web service port and traefik label too
 
   ## To reduce RAM usage (targeting 256-512 MB), consider disabling:
