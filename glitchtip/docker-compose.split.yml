@@ -1,7 +1,9 @@
 # Based on https://glitchtip.com/assets/compose.sample.yml (GlitchTip 6)
+# Split variant: web and worker run as separate services, migrations run once in `migrate`.
+# Usage: docker compose -f docker-compose.split.yml up -d
 # Create superuser to access django admin (set ENABLE_ADMIN: "True"): exec in web container: ./manage.py createsuperuser
 # Add user via admin web without setup email
-# Migrations run automatically on startup. Upgrade: docker compose pull && docker compose up -d
+# Upgrade: docker compose -f docker-compose.split.yml pull && docker compose -f docker-compose.split.yml up -d
 # -------------------------------------------------------------------------------------------
 
 x-environment:
@@ -89,10 +91,24 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate: # One-shot: migrations, cache table, partitions. web/worker wait for it to succeed.
+    <<: *default
+    image: glitchtip/glitchtip:6
+    restart: "no"
+    depends_on: *default-depends_on
+    networks:
+      - traefik-net
+      - internal
+    command: ./bin/run-migrate.sh
+    environment: *default-environment
+
   web:
     <<: *default
     image: glitchtip/glitchtip:6 # Check https://glitchtip.com/blog/ for new major versions
-    depends_on: *default-depends_on
+    depends_on: &app-depends_on
+      <<: *default-depends_on
+      migrate:
+        condition: service_completed_successfully
     networks:
       - traefik-net
       - internal
@@ -100,7 +116,8 @@ services:
       - "127.0.0.1:8000:8000"
     environment:
       <<: *default-environment
-      SERVER_ROLE: all_in_one # web + background worker + migrations in one container
+      SERVER_ROLE: web # HTTP only, does not run migrations
+      # GRANIAN_WORKERS: 2 # Web processes, default 1
     volumes:
       - uploads:/code/uploads
     labels:
@@ -110,6 +127,21 @@ services:
       traefik.http.routers.glitchtip.entrypoints: https
       traefik.http.routers.glitchtip.tls.certresolver: ssl
       traefik.http.services.glitchtip.loadbalancer.server.port: 8000
+
+  worker: # Runs the task scheduler too: keep a single replica, raise VTASKS_CONCURRENCY to scale instead
+    <<: *default
+    image: glitchtip/glitchtip:6
+    depends_on: *app-depends_on
+    networks:
+      - traefik-net
+      - internal
+    environment:
+      <<: *default-environment
+      SERVER_ROLE: worker
+      # VTASKS_CONCURRENCY: 20 # Concurrent background tasks, default 20
+      # DATABASE_POOL_MAX_SIZE: 20 # Keep in line with VTASKS_CONCURRENCY and postgres max_connections
+    volumes:
+      - uploads:/code/uploads
 
 volumes:
   uploads:
