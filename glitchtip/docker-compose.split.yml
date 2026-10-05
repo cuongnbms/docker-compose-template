@@ -12,7 +12,7 @@ x-environment:
   VALKEY_URL: redis://:${VALKEY_PASSWORD:?set VALKEY_PASSWORD in .env}@valkey:6379 # Or set to blank string to disable
   SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
   EMAIL_URL: consolemail:// # Example smtp://email:password@smtp_url:port https://glitchtip.com/documentation/install#configuration
-  GLITCHTIP_DOMAIN: https://glitchtip.example.com # Change this to your domain
+  GLITCHTIP_DOMAIN: https://${GLITCHTIP_HOST:?set GLITCHTIP_HOST in .env}
   DEFAULT_FROM_EMAIL: email@example.com # Change this to your email
   ENABLE_ADMIN: "False" # Set to True to enable Django Admin at /admin/
   ENABLE_OPENAPI: "False" # Set to True to enable OpenAPI spec at /api/docs
@@ -123,7 +123,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: traefik-net
-      traefik.http.routers.glitchtip.rule: Host(`glitchtip.example.com`)
+      traefik.http.routers.glitchtip.rule: Host(`${GLITCHTIP_HOST:?set GLITCHTIP_HOST in .env}`)
       traefik.http.routers.glitchtip.entrypoints: https
       traefik.http.routers.glitchtip.tls.certresolver: ssl
       traefik.http.services.glitchtip.loadbalancer.server.port: 8000

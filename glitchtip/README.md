@@ -26,10 +26,10 @@ openssl rand -hex 24   # POSTGRES_PASSWORD
 openssl rand -hex 24   # VALKEY_PASSWORD
 openssl rand -hex 32   # SECRET_KEY
 ```
+Also set `GLITCHTIP_HOST` to your domain (no `https://`); it drives both `GLITCHTIP_DOMAIN` and the Traefik rule.
 `docker compose` refuses to start if any of these is missing.
 
 2. Edit `docker-compose.yml`:
-   - `GLITCHTIP_DOMAIN` and the Traefik label `traefik.http.routers.glitchtip.rule`: your domain
    - `EMAIL_URL` / `DEFAULT_FROM_EMAIL`: your SMTP, e.g. `smtp://email:password@smtp_url:port`
      (`consolemail://` sends no email at all)
 
