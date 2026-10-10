@@ -15,7 +15,7 @@ x-default: &default
 services:
   wg-easy:
     <<: *default
-    image: ghcr.io/wg-easy/wg-easy:15
+    image: ghcr.io/wg-easy/wg-easy:15.4.0
     container_name: wg-easy
     environment:
       - DISABLE_IPV6=true
