@@ -22,7 +22,7 @@ services:
       # --- Init headless (Runs on first boot only, remove this block afterward) ---
       - INIT_ENABLED=true
       - INIT_USERNAME=admin
-      - INIT_PASSWORD=admin                # Plain text, no longer a hash
+      - INIT_PASSWORD=${WG_ADMIN_PASSWORD:?set in .env}  # min 12 chars; plain text
       - INIT_HOST=123.123.123.123          # Bastion EIP
       - INIT_PORT=51820
       - INIT_DNS=10.8.0.2                  # AmazonProvidedDNS to resolve EKS/RDS endpoints x.x.x.2
